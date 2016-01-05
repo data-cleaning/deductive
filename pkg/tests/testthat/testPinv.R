@@ -2,7 +2,7 @@
 context("Imputation by pseudoinverse")
 
 test_that("Computing pseudoinverse",{
-
+ # example from appendix of Schaum's outline (2009) on linear algebra
   A <- matrix(c(
      1,  1, -1,  2,
      2,  2, -1,  3,

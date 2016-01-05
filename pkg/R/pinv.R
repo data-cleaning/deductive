@@ -18,5 +18,29 @@ pinv <- function(A, eps=1e-8){
 
 
 
+#' Impute values derived from linear equality restrictions.
+#'
+#' @param dat an R object carrying data
+#' @param x an R object carrying validation rules
+#' @param ... arguments to be passed to other methods.
+#' @export
+setGeneric("impute_ler", function(dat, x,...) standardGeneric("impute_ler"))
 
 
+#' @rdname impute_ler
+setMethod("impute_ler", c("data.frame","validator"), function(dat, x, ...){
+  x
+  dat
+})
+
+
+
+
+
+
+
+
+
+
+
+  
