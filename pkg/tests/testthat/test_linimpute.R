@@ -38,6 +38,6 @@ test_that("imputation by pseudoinverse",{
     , x10 = 217
     , x11 = 24
   )
-  expect_equal(impute_ler(dat,v), d2)
+  expect_equal(impute_lr(dat,v), d2)
   
 })
