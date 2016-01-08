@@ -11,6 +11,8 @@ install:
   - cd ./pkg
   - ../travis-tool.sh install_deps
   - ../travis-tool.sh install_r roxygen2
+  - R -e "install.packages('lintools',repos='http://data-cleaning.github.io/drat/')"
+  - R -e "install.packages('validate',repos='http://cran.rstudio.com')"
   - R -e "roxygen2::update_collate('.');devtools::document()"
 script: 
   - ../travis-tool.sh run_tests
