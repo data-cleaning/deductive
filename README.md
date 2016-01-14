@@ -13,3 +13,4 @@ This R package is the next iteration of out [deducorrect](https://cran.r-project
 - performs better then deducorrect
 - with a cleaner interface
 
+
