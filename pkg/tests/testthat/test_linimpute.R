@@ -105,3 +105,25 @@ test_that("imputation of zeros",{
 })
 
 
+test_that("imputation of implied values",{
+  
+  
+  v <- validator(x + 2*y == 3,   x + y + z == 7)
+  L <- v$linear_coefficients()
+  # takes two iterations to impute
+  x_ <- c(1,NA,NA)
+  expect_equal(
+    impute_implied(L$A, L$b, L$operators, x_)
+    ,c(1,1,5)
+  )
+  # inequalities (single iteration)
+  v <- validator( x <= 0, x >=0, y <=1, y >= 1)
+  L <- v$linear_coefficients()
+  x_ <- c(NA,NA)
+  expect_equal(
+      impute_implied(L$A, L$b, L$operators, x_)
+      , c(0,1)
+  )
+})
+
+

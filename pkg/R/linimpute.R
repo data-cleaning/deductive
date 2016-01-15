@@ -95,14 +95,79 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
 # implied values
 # impute values implied by two simple inequalities
 #
+impute_implied <- function(A, b, ops, x, eps=1e-8){
+  missing <- is.na(x)
+  L <- list(A=A,b=b)
+  prev_nmiss <- Inf 
+  curr_nmiss <- sum(missing) 
+
+  while (prev_nmiss > curr_nmiss){
+    prev_nmiss <- curr_nmiss
+    # substitute observed values
+    L <- lintools::subst_value(
+      A = A
+      , b = b
+      , variables = !missing
+      , values = x[!missing]
+    )
+    
+    #
+    iA <- abs(L$A) > eps
+    isingle <- rowSums(iA>eps) == 1 
+    
+    # replace single-variable equalities
+    ieq <- isingle & ops == "=="
+    varindex <- apply(iA[ieq,,drop=FALSE],1,which)
+    x[varindex] <- L$b[isingle] / L$A[cbind(which(isingle),varindex)]
+
+    # single-variable inequalities
+    ileq <- which(isingle & ops == "<=")
+    # construct normalized 
+    ba <- abs(L$b[ileq])
+    i <- ba<eps
+    ba[i] <- 0
+    Aa <- L$A[ileq,,drop=FALSE]/(ba + i) # divide by 1 if ba is numerically zero
+    
+    # compute pair locations
+    I <- rep(ileq, times=length(ileq))
+    J <- rep(ileq, each=length(ileq))
+    # avoid double work
+    ii <- I<J
+    I <- I[ii]
+    J <- J[ii]
+    # actual comparison
+    ipairs <- which( rowSums(abs(Aa[I,,drop=FALSE] + Aa[J,,drop=FALSE])) < eps )
+    ipairs <- I[ipairs]
+    
+    iA <- iA[ileq,,drop=FALSE]
+    varindex <-  apply(iA[ipairs,,drop=FALSE],1,which)   
+    x[varindex] <- ba[ipairs] / Aa[cbind(ipairs,varindex)]
+    
+    missing <- is.na(x)
+    curr_nmiss <- sum(missing)
+    
+  }
+    
+  x
+}
+
+
+#debugonce(impute_implied)
+
+
+#  library(validate)
+#  v <- validator(x + 2*y == 3,   x + y + z == 7)
+#  L <- v$linear_coefficients()
+#  x_ <- c(1,NA,NA)
+#  impute_implied(L$A, L$b, L$operators, x_)
+#  
+#  x_ <- c(1,1,NA)
+#  lintools::subst_value(L$A,L$b,!is.na(x_),x_[!is.na(x_)])
+#  
+#  debugonce(impute_implied)
 
 
 
 
 
 
-
-
-
-
-  
