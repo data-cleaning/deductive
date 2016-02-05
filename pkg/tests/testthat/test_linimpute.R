@@ -38,7 +38,10 @@ test_that("imputation by pseudoinverse",{
     , x10 = 217
     , x11 = 24
   )
-  expect_equal(impute_lr(dat,v), d2)
+  lc <- v$linear_coefficients()
+  expect_equivalent(
+    pivimpute(A=lc$A, b= lc$b,ops = lc$operators, x=t(dat), eps=1e-8)
+  , t(d2))
   
 })
 
@@ -79,7 +82,11 @@ test_that("imputation with zeros",{
     , x10 = 217
     , x11 = 24
   )
-  expect_equal(impute_lr(dat,v), d2)
+  lc <- v$linear_coefficients()
+  expect_equivalent(
+    zeroimpute(A=lc$A, b=lc$b, ops=lc$operators, x=t(dat) ,eps=1e-8)
+    , t(d2)
+  )
   
 })
 
@@ -113,7 +120,7 @@ test_that("imputation of implied values",{
   # takes two iterations to impute
   x_ <- c(1,NA,NA)
   expect_equal(
-    impute_implied(L$A, L$b, L$operators, x_)
+    impute_implied_x(L$A, L$b, L$operators, x_)
     ,c(1,1,5)
   )
   # inequalities (single iteration)
@@ -121,7 +128,7 @@ test_that("imputation of implied values",{
   L <- v$linear_coefficients()
   x_ <- c(NA,NA)
   expect_equal(
-      impute_implied(L$A, L$b, L$operators, x_)
+      impute_implied_x(L$A, L$b, L$operators, x_)
       , c(0,1)
   )
 })

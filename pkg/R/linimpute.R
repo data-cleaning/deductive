@@ -19,12 +19,11 @@ setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
   }
-  attr(X,"changed") <- FALSE
-  X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
-  X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
+  attr(X,"changed") <- TRUE
   while ( attr(X,"changed") ){
     X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
     X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
+    X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
   }
   dat[rownames(X)] <- t(X)
   dat
@@ -56,7 +55,8 @@ pivimpute <- function(A, b, ops, x, eps=1e-8){
     Id <- diag(1,nrow(Ami))
     C <- abs(Id - Ami %*% Am)
     J <- rowSums( C < eps) == ncol(C)
-    v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+    #v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+    v <- Ami%*%(b - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
     x_[which(miss)[J]] <- v[J]
     changed <- changed | any(J)
     x[,col] <- x_
@@ -86,16 +86,24 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
   storage.mode(b) <- "double"
   storage.mode(x) <- "double"
   storage.mode(eps) <- "double"
-  changed <- attr(x,"changed")
-  x <- .Call("R_imputezero",A[eq,,drop=FALSE],b[eq,,drop=FALSE], x, nonneg, eps)
+  changed <- if ( is.null(attr(x,"changed")) ) FALSE else attr(x,"changed")
+  x <- .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg, eps)
   attr(x,"changed") <- attr(x,"changed") | changed
   x
 }
 
+
+
+
 # implied values
 # impute values implied by two simple inequalities
-#
+
 impute_implied <- function(A, b, ops, x, eps=1e-8){
+  apply(x,2,impute_implied_x, A=A, b=b, ops=ops, eps=eps)
+}
+
+
+impute_implied_x <- function(A, b, ops, x, eps=1e-8){
   missing <- is.na(x)
   L <- list(A=A,b=b)
   prev_nmiss <- Inf 
@@ -149,6 +157,45 @@ impute_implied <- function(A, b, ops, x, eps=1e-8){
   }
     
   x
+}
+
+impute_iter <- function(A, b, ops, x, eps=1e-8){
+  attr(x,"changed") <- TRUE
+  while( attr(x,"changed") ){
+    x <- pivimpute(A=A,b=b,ops=ops,x=x,eps=eps)
+    x <- zeroimpute(A=A,b=b,ops=ops,x=x,eps=eps)
+    x <- impute_implied_x(A=A,b=b,ops=ops,x=x,eps=eps)
+  }
+  x
+}
+
+get_ops <- function(L){
+  ops <- rep("<",nrow(L$A))
+  ops[seq_len(L$neq)] <- "=="
+  ops[L$neq + seq_len(L$nleq)] <- "<="
+  ops
+}
+
+# imputation by (repeated) FM elimination.
+# we assume that the system <A,x,ops,b> is normalized
+fmimpute_x <- function(x, A, b, ops, eps, H=NULL, h=0, todo = !is.na(x) ){
+  if (!any(todo)) return(x)
+  neq <- sum(ops=="==")
+  nleq <- sum(ops=="<=")
+  missing <- is.na(x)
+  if (!any(missing)) return(x)
+  
+  x.old <- x 
+  x <- impute_iter( A=A, b=b, ops=ops, x=x,eps=eps)
+  todo <- todo | ( !is.na(x) & is.na(x.old) )
+  var <- which(todo)[1]
+  todo[var] <- FALSE
+  L <- lintools::eliminate(A=A, b=b, neq=neq, nleq=nleq, variable=var, H=H, h=h)
+  if ( nrow(L$A) > 0 ){ 
+    fmimpute_x(A=L$A, b=L$b, ops=get_ops(L), x=x, eps=eps, H = L$H, h = L$h,todo=todo)
+  } else {
+    x
+  }
 }
 
 
