@@ -15,8 +15,9 @@
 #' @param x an R object carrying validation rules
 #' @param ... arguments to be passed to other methods.
 #' 
-#' @example 
-#' v <- validator(y ==2,y + z ==3, x +y <= 0)
+#' @examples
+#'
+#' v <- validate::validator(y ==2,y + z ==3, x +y <= 0)
 #' dat <- data.frame(x=NA_real_,y=NA_real,z=NA_real)
 #' impute_lr(dat,v)
 #' 

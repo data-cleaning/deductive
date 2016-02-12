@@ -1,7 +1,7 @@
 #' Deductive Data Correction and Imputation
 #' 
 #' @name deductive
-#' @doctype package
+#' @docType  package
 #' @import methods
 #' @import lintools
 #' @import validate
