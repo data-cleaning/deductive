@@ -15,6 +15,6 @@ Depends: R (>= 3.2.0)
 URL: https://github.com/data-cleaning/deductive
 BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2015-08-28
-Imports: methods, lintools, validate 
+Imports: methods, lintools (>= 0.1.1), validate 
 Suggests: testthat, knitr
 VignetteBuilder: knitr

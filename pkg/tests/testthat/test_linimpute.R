@@ -134,3 +134,16 @@ test_that("imputation of implied values",{
 })
 
 
+test_that("imputation by range determination",{
+  # y == 2
+  # y + z == 3  (so z=1)
+  # x + y <= 0  
+  A <- matrix(c(0,0,1, 1,1,1,0,1,0),nrow=3)
+  b <- c(2,3,0)
+  impute_range_x(x=c(NA,NA,NA), A=A, b=b, neq=2, nleq=1, eps=1e-8)
+  lintools::ranges(A,b,neq=2,nleq=1)
+})
+
+
+
+
