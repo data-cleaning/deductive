@@ -4,9 +4,23 @@
 
 #' Impute values derived from linear (in)equality restrictions.
 #'
+#' Partially filled records \eqn{\boldymbol{x}} under linear (in)equality
+#' restrictions may reveal unique imputation solutions when the system
+#' of linear inequalities is reduced by substituting observed values.
+#' This function applies a number of fast heuristic methods before
+#' deriving all variable ranges and unique values.
+#'
+#'
 #' @param dat an R object carrying data
 #' @param x an R object carrying validation rules
 #' @param ... arguments to be passed to other methods.
+#' 
+#' @examples
+#'
+#' v <- validate::validator(y ==2,y + z ==3, x +y <= 0)
+#' dat <- data.frame(x=NA_real_,y=NA_real,z=NA_real)
+#' impute_lr(dat,v)
+#' 
 #' @export
 setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 
@@ -15,6 +29,10 @@ setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
   lc <- x$linear_coefficients()
+  ops <- lc$operators
+  lc <- lintools::normalize(lc$A,lc$b,lc$operators)
+  lc$operators <- ops[lc$order]
+  
   X <- t(dat[colnames(lc$A)])
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
@@ -26,6 +44,8 @@ setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
     X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
     X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
   }
+  # Impute by determining implied variable ranges.
+  X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
   dat[rownames(X)] <- t(X)
   dat
 })
@@ -57,7 +77,7 @@ pivimpute <- function(A, b, ops, x, eps=1e-8){
     C <- abs(Id - Ami %*% Am)
     J <- rowSums( C < eps) == ncol(C)
     #v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
-    v <- Ami%*%(b - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+    v <- Ami%*%(b[eq] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
     x_[which(miss)[J]] <- v[J]
     changed <- changed | any(J)
     x[,col] <- x_
@@ -100,7 +120,10 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
 # impute values implied by two simple inequalities
 
 impute_implied <- function(A, b, ops, x, eps=1e-8){
-  apply(x,2,impute_implied_x, A=A, b=b, ops=ops, eps=eps)
+  nna <- sum(is.na(x))
+  x <- apply(x,2,impute_implied_x, A=A, b=b, ops=ops, eps=eps)
+  attr(x,"changed") <- nna > sum(is.na(x))
+  x
 }
 
 
@@ -177,45 +200,21 @@ get_ops <- function(L){
   ops
 }
 
-# imputation by (repeated) FM elimination.
-# we assume that the system <A,x,ops,b> is normalized
-fmimpute_x <- function(x, A, b, ops, eps, H=NULL, h=0, todo = !is.na(x) ){
-  if (!any(todo)) return(x)
+
+# loop over a numeric array
+impute_range <- function(A, b, x, ops, eps=1e-8){
   neq <- sum(ops=="==")
-  nleq <- sum(ops=="<=")
-  missing <- is.na(x)
-  if (!any(missing)) return(x)
-  
-  x.old <- x 
-  x <- impute_iter( A=A, b=b, ops=ops, x=x,eps=eps)
-  todo <- todo | ( !is.na(x) & is.na(x.old) )
-  var <- which(todo)[1]
-  todo[var] <- FALSE
-  L <- lintools::eliminate(A=A, b=b, neq=neq, nleq=nleq, variable=var, H=H, h=h)
-  if ( nrow(L$A) > 0 ){ 
-    fmimpute_x(A=L$A, b=L$b, ops=get_ops(L), x=x, eps=eps, H = L$H, h = L$h,todo=todo)
-  } else {
-    x
-  }
+  nleq <- sum(ops == "<=")
+  apply(x,2,impute_range_x,A=A,b=b,neq=neq,nleq=nleq,eps=eps)
 }
 
-
-#debugonce(impute_implied)
-
-
-#  library(validate)
-#  v <- validator(x + 2*y == 3,   x + y + z == 7)
-#  L <- v$linear_coefficients()
-#  x_ <- c(1,NA,NA)
-#  impute_implied(L$A, L$b, L$operators, x_)
-#  
-#  x_ <- c(1,1,NA)
-#  lintools::subst_value(L$A,L$b,!is.na(x_),x_[!is.na(x_)])
-#  
-#  debugonce(impute_implied)
-
-
-
-
-
-
+# impute by deriving variable ranges (may be computationally expensive)
+impute_range_x <- function(x,A,b,neq, nleq,eps=1e-8){
+  obs <- !is.na(x)
+  if (all(obs)) return(x)
+  L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
+  R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
+  i <- R[ ,"upper"] - R[ ,"lower"] < eps
+  x[i] <- R[i,"upper"]
+  x
+}

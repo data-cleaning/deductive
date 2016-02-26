@@ -10,7 +10,7 @@ Methods for deductive data correction and imputation
 This R package is the next iteration of out [deducorrect](https://cran.r-project.org/web/packages/deducorrect/index.html) package. The deductive package 
 
 - integrates with our [validate](https://cran.r-project.org/web/packages/validate/index.html) infrastructure for data validation
-- performs better then deducorrect
+- performs better than `deducorrect`
 - with a cleaner interface
 
 
