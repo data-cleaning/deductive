@@ -19,6 +19,7 @@ setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
   }
+  ## TODO: optionally use fmimpute
   attr(X,"changed") <- TRUE
   while ( attr(X,"changed") ){
     X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)

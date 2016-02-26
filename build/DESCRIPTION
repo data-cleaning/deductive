@@ -1,7 +1,7 @@
 Package: deductive
 Maintainer: Mark van der Loo <mark.vanderloo@gmail.com>
 License: GPL-3
-Title: Deductive Data Correction and Imputation
+Title: Data Correction and Imputation Using Deductive Methods
 LazyData: no
 Type: Package
 LazyLoad: yes
@@ -15,6 +15,6 @@ Depends: R (>= 3.2.0)
 URL: https://github.com/data-cleaning/deductive
 BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2015-08-28
-Imports: methods, lintools, validate 
+Imports: methods, lintools, validate, stringdist
 Suggests: testthat, knitr
 VignetteBuilder: knitr
