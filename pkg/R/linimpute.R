@@ -4,7 +4,7 @@
 
 #' Impute values derived from linear (in)equality restrictions.
 #'
-#' Partially filled records \eqn{\boldymbol{x}} under linear (in)equality
+#' Partially filled records \eqn{\boldsymbol{x}} under linear (in)equality
 #' restrictions may reveal unique imputation solutions when the system
 #' of linear inequalities is reduced by substituting observed values.
 #' This function applies a number of fast heuristic methods before
@@ -18,7 +18,7 @@
 #' @examples
 #'
 #' v <- validate::validator(y ==2,y + z ==3, x +y <= 0)
-#' dat <- data.frame(x=NA_real_,y=NA_real,z=NA_real)
+#' dat <- data.frame(x=NA_real_,y=NA_real_,z=NA_real_)
 #' impute_lr(dat,v)
 #' 
 #' @export
