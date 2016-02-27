@@ -5,6 +5,7 @@ language: r
 cache: packages
 
 before_install:
+  - cp build/DESCRIPTION ./pkg
   - cd ./pkg
 
 r_github_packages:
