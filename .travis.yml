@@ -5,11 +5,13 @@ language: r
 cache: packages
 
 before_install:
-  - cp build/DESCRIPTION ./pkg
+  - R -e "install.packages(c('devtools','roxygen2'))"
+  - R -e "devtools::document('pkg')"
   - cd ./pkg
 
-r_github_packages:
-  - jimhester/covr
+r_packages:
+  - covr
+  - rmarkdown
 
 
 after_success:
