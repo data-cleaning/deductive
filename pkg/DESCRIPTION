@@ -6,11 +6,11 @@ LazyData: no
 Type: Package
 LazyLoad: yes
 Authors@R: c(person("Mark", "van der Loo",role=c("cre","aut"),email="mark.vanderloo@gmail.com")
-    , person("Edwin", "de Jonge", role="aut")
-    , person("Paul","Hsieh",role="ctb"))
-Description: Attempt to repair inconsistencies in data records by deriving
-    information from valid values and validation rules restricting the data.
-Version: 0.0.1
+    , person("Edwin", "de Jonge", role="aut"))
+Description: Attempt to repair inconsistencies and missing values in data 
+    records by using information from valid values and validation rules 
+    restricting the data.
+Version: 0.1.0
 Depends:
     R (>= 3.2.0)
 URL: https://github.com/data-cleaning/deductive
@@ -18,11 +18,10 @@ BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2015-08-28
 Imports:
     methods,
-    lintools (>= 0.1.1),
+    lintools (>= 0.1.1.1),
     validate,
     stringdist
 Suggests:
     testthat,
     knitr
-VignetteBuilder: knitr
 RoxygenNote: 5.0.1

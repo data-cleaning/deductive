@@ -5,7 +5,9 @@
 #' @import methods
 #' @import lintools
 #' @import validate
-#' @import stringdist
+#' @importFrom stringdist stringdist
+#' @importFrom stats complete.cases 
+#' @importFrom stats setNames
 #' @useDynLib deductive
 {}
 
