@@ -110,3 +110,12 @@ test_that("correct_typos with missing variable works",{
 
 })
 
+test_that("correct_typos does not violate extra rules",{
+  v <- validate::validator(x+y==z,x<0)
+  dat <- data.frame(x=-123,y=129,z=252)
+  # attempts to flip sign, rejects because of the demand that x < 0
+  expect_equal(correct_typos(dat,v),dat)
+})
+
+
+
