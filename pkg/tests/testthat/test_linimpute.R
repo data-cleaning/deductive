@@ -133,6 +133,30 @@ test_that("imputation of implied values",{
   )
 })
 
+test_that("impute_lr errors when it should",{
+  v <- validator(x == y)
+  expect_error(impute_lr(data.frame(x="a",y=10),v), regexp="Linear restrictions on nonnumeric data")
+  
+})
+
+
+test_that("impute_lr",{
+  # example from DCAR 
+  v <- validate::validator( 
+    x1 + x2      == x3 
+    , x4 + x5 + x6 == x1 
+    , x7 + x8      == x2 
+    , x9 + x10     == x3) 
+  dat <- data.frame( 
+    x1 = 100, x2=NA_real_, x3=NA_real_, x4 = 15, x5 = NA_real_ 
+    , x6 = NA_real_, x7 = 25, x8 = 35, x9 = NA_real_, x10 = 5) 
+  
+  expect_equal(
+    impute_lr(dat,v) 
+  , data.frame( x1 = 100, x2=60, x3=160, x4 = 15, x5 = NA_real_ 
+              , x6 = NA_real_, x7 = 25, x8 = 35, x9 = 155, x10 = 5)
+  ) 
+})
 
 test_that("imputation by range determination",{
   # y == 2
