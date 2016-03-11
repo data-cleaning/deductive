@@ -184,22 +184,7 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
   x
 }
 
-impute_iter <- function(A, b, ops, x, eps=1e-8){
-  attr(x,"changed") <- TRUE
-  while( attr(x,"changed") ){
-    x <- pivimpute(A=A,b=b,ops=ops,x=x,eps=eps)
-    x <- zeroimpute(A=A,b=b,ops=ops,x=x,eps=eps)
-    x <- impute_implied_x(A=A,b=b,ops=ops,x=x,eps=eps)
-  }
-  x
-}
 
-get_ops <- function(L){
-  ops <- rep("<",nrow(L$A))
-  ops[seq_len(L$neq)] <- "=="
-  ops[L$neq + seq_len(L$nleq)] <- "<="
-  ops
-}
 
 
 # loop over a numeric array
