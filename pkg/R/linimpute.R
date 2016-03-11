@@ -158,7 +158,8 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
     ba <- abs(L$b[ileq])
     i <- ba<eps
     ba[i] <- 0
-    Aa <- L$A[ileq,,drop=FALSE]/(ba + i) # divide by 1 if ba is numerically zero
+    Aa <- L$A
+    Aa[ileq,] <- L$A[ileq,,drop=FALSE]/(ba + i) # divide by 1 if ba is numerically zero
     
     # compute pair locations
     I <- rep(ileq, times=length(ileq))
@@ -171,7 +172,7 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
     ipairs <- which( rowSums(abs(Aa[I,,drop=FALSE] + Aa[J,,drop=FALSE])) < eps )
     ipairs <- I[ipairs]
     
-    iA <- iA[ileq,,drop=FALSE]
+    #iA <- iA[ileq,,drop=FALSE]
     varindex <-  apply(iA[ipairs,,drop=FALSE],1,which)   
     x[varindex] <- ba[ipairs] / Aa[cbind(ipairs,varindex)]
     
