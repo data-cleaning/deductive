@@ -102,13 +102,14 @@ is_gt_zero_constraint <- function(A, b,ops,eps){
 #
 zeroimpute <- function(A, b, ops, x, eps=1e-8){
   nonneg <- is_gt_zero_constraint(A,b,ops,eps)
+  nonneg_var <- colSums(abs(A[nonneg,,drop=FALSE])) > eps
   eq <- ops == "=="
   storage.mode(A) <- "double"
   storage.mode(b) <- "double"
   storage.mode(x) <- "double"
   storage.mode(eps) <- "double"
   changed <- if ( is.null(attr(x,"changed")) ) FALSE else attr(x,"changed")
-  x <- .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg, eps)
+  x <- .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg_var, eps)
   attr(x,"changed") <- attr(x,"changed") | changed
   x
 }

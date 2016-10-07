@@ -46,6 +46,7 @@ int impute_zero(double *a, double b, int n, int *nneg, double eps, double *x){
     , nzr = 0L   // number of a that are zero
     , nng = 0L;  // number of x that must be nonnegative
   for (int i=0; i < n; i++){
+//Rprintf("nneg[%d] = %d\n",i,nneg[i]);
     if ( ISNA(x[i]) ){
       ++nNA;
       if ( fabs(a[i]) < eps ) nzr++;
@@ -54,7 +55,7 @@ int impute_zero(double *a, double b, int n, int *nneg, double eps, double *x){
     } else {
       s += a[i]*x[i];
     }
-//Rprintf("nNA = %d, nzr=%d, sgn=%d, nng=%d, s=%12.8f\n",nNA,nzr,sgn,nng,s);
+//Rprintf("nNA = %d, nzr=%d, sgn=%d, nng=%d, s=%12.8f b=%12.8f\n",nNA,nzr,sgn,nng,s,b);
   }
   if ( nNA > 0 && (sgn-nzr) == nNA && nNA == nng && fabs(s - b) < eps   ){
     for (int i=0; i < n; i++ ){
@@ -79,8 +80,8 @@ int impute_zero(double *a, double b, int n, int *nneg, double eps, double *x){
  */
 SEXP R_imputezero(SEXP A_, SEXP b_, SEXP X_, SEXP nonneg_, SEXP eps_ ){
   SEXP XC = PROTECT(duplicate(X_));
-  double *A = REAL(A_)
-    , *b = REAL(b_);
+  double *A = REAL(A_);
+  double *b = REAL(b_);
   double eps = REAL(eps_)[0];
 
   int *nonneg = INTEGER(nonneg_);
