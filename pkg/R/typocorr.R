@@ -30,11 +30,11 @@
 #' \itemize{
 #' \item{The first version of the algorithm was described by S. Scholtus (2009). Automatic
 #' correction of simple typing errors in numerical data with balance edits. Statistics 
-#' Netherlands, Discussion Paper \href{http://www.cbs.nl/en-GB/menu/methoden/onderzoek-methoden/discussionpapers/archief/2009/2009-46-x10-pubpdf.htm}{09046}
+#' Netherlands, Discussion Paper \href{https://www.cbs.nl/nl-nl/achtergrond/2009/48/automatic-correction-of-simple-typing-errors-in-numerical-data-with-balance-edits}{09046}
 #' }
 #' \item{The generalized version of this algorithm that is implemented for this package is
 #' described in M. van der Loo, E. de Jonge and S. Scholtus (2011). Correction of rounding, typing and sign errors with the deducorrect package.
-#' Statistics Netherlands, Discussion Paper \href{http://www.cbs.nl/nl-NL/menu/methoden/onderzoek-methoden/discussionpapers/archief/2011/correction-of-rounding-typing-and-sign-errors-with-the-deducorrect-package.htm}{2011019}
+#' Statistics Netherlands, Discussion Paper \href{https://www.cbs.nl/nl-nl/achtergrond/2011/51/deductive-imputation-with-the-deducorrect-package}{2011019}
 #' }
 #' }
 #'
