@@ -1,3 +1,6 @@
+version 0.1.2
+- bugfix in range-imputation (crashed when both upper and lower limit are -Inf)
+
 version 0.1.1
 - bugfix in zero-imputation
 

@@ -202,6 +202,7 @@ impute_range_x <- function(x,A,b,neq, nleq,eps=1e-8){
   L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
   R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
   i <- R[ ,"upper"] - R[ ,"lower"] < eps
+  i[!is.finite(i)] <- FALSE
   x[i] <- R[i,"upper"]
   x
 }

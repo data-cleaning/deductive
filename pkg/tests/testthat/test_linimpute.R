@@ -166,6 +166,20 @@ test_that("imputation by range determination",{
   b <- c(2,3,0)
   impute_range_x(x=c(NA,NA,NA), A=A, b=b, neq=2, nleq=1, eps=1e-8)
   lintools::ranges(A,b,neq=2,nleq=1)
+  
+  # this went haywire since one of the ranges results in -Inf - -Inf
+  
+  v <- validator(
+    x1 >= 0, x2 >= 0, x1 + x2 == x3
+    , x4 >= 0, x5 >= 0, x6 >= 0
+    , x4 + x5 + x6 == x7
+    , x3 + x7 == x8
+  )
+
+  df_in <- data.frame(x1=25,x2=NA_real_,x3=25,x4=1,x5=NA_real_,x6=NA_real_,x7=1,x8=26)
+  df_out <- df_in; df_out[1,2] <- 0
+  expect_equal(impute_lr(df_in,v),df_out)
+
 })
 
 
