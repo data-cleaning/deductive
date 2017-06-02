@@ -8,7 +8,7 @@
 #' @importFrom stringdist stringdist
 #' @importFrom stats complete.cases 
 #' @importFrom stats setNames
-#' @useDynLib deductive
+#' @useDynLib deductive, .registration=TRUE
 {}
 
 

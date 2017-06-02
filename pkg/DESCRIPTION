@@ -18,10 +18,10 @@ BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2017-02-22
 Imports:
     methods,
-    lintools (>= 0.1.1.1),
+    lintools (>= 0.1.1.2),
     validate,
     stringdist
 Suggests:
     testthat,
     knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

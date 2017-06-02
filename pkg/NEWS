@@ -1,5 +1,7 @@
 version 0.1.2
 - bugfix in range-imputation (crashed when both upper and lower limit are -Inf)
+- updated a test, and switched off for now to accomodate for updating 'lintools'
+- registered native routines as now required by CRAN
 
 version 0.1.1
 - bugfix in zero-imputation
