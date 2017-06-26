@@ -1,3 +1,7 @@
+version 0.1.3
+- bugfix in correct_typos (crashed in presence of certain inequality rules).
+
+
 version 0.1.2
 - bugfix in range-imputation (crashed when both upper and lower limit are -Inf)
 - updated a test, and switched off for now to accomodate for updating 'lintools'

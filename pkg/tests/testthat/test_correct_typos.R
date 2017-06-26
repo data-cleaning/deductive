@@ -115,6 +115,22 @@ test_that("correct_typos does not violate extra rules",{
   dat <- data.frame(x=-123,y=129,z=252)
   # attempts to flip sign, rejects because of the demand that x < 0
   expect_equal(correct_typos(dat,v),dat)
+  
+  # regression test (used to crash on non-compatible matrix multiplication)
+  data(retailers,package="validate")
+  dat <- retailers[13,]
+  v <- validator(staff >= 0
+        , turnover >= 0
+        , other.rev >= 0
+        , staff.costs >= 0
+        , total.costs >= 0
+        , turnover + other.rev == total.rev
+        , turnover - total.costs == profit
+        , staff.costs >= staff)
+  
+  expect_equivalent(dat, correct_typos(dat,v))
+  
+  
 })
 
 

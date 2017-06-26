@@ -60,7 +60,7 @@ setMethod("correct_typos", c("data.frame","validator")
   F <- x[!eq,]  # inequalities
   E <- x[eq,]   # equalities
   a <- a[eq]
-  vars <- validate::variables(x)
+  vars <- validate::variables(E)
   
   fixate <- if( is.null(fixate) ) {
       rep(FALSE, length(vars))
