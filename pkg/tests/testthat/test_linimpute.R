@@ -183,6 +183,16 @@ test_that("imputation by range determination",{
 
 })
 
+test_that("works with var_group",{
+  rules <- validator(var_group(a,b,c,d) >= 0, a+b+c == d)
+  d <- data.frame(a=NA, b=NA, c=5,d=5)
+  expect_equal(impute_lr(d,rules), data.frame(a=0,b=0,c=5,d=5))
+})
 
+test_that("works with ill-defined problem",{
+  rules <- validator(var_group(a,b,c,d)>=0, a+b+c==d)
+  d <- data.frame(a=NA_real_, b=NA_real_, c=10., d=9.)
+  expect_equal(impute_lr(d,rules), d)
+})
 
 

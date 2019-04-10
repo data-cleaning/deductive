@@ -1,6 +1,10 @@
 version 0.1.3
-- bugfix in correct_typos (crashed in presence of certain inequality rules).
-
+- fix: 'correct_typos' crashed in presence of certain inequality rules
+- fix: 'impute_lr' gave faulty results when using 'var_group' validation 
+       rules (thanks to GH user smartie5)
+- fix: 'impute_lr' gave faulty results in cases where data contradicts rules 
+       (issue #2). Thanks to GH user smartie5
+  
 
 version 0.1.2
 - bugfix in range-imputation (crashed when both upper and lower limit are -Inf)

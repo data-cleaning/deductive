@@ -28,6 +28,9 @@ setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 #' @rdname impute_lr
 setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
+
+  x <- do.call("validator", x$exprs(lin_eq_eps=0, lin_ineq_eps=0))
+
   lc <- x$linear_coefficients()
   ops <- lc$operators
   lc <- lintools::normalize(lc$A,lc$b,lc$operators)
@@ -201,7 +204,7 @@ impute_range_x <- function(x,A,b,neq, nleq,eps=1e-8){
   if (all(obs)) return(x)
   L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
   R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
-  i <- R[ ,"upper"] - R[ ,"lower"] < eps
+  i <- (R[ ,"upper"] - R[ ,"lower"] < eps) & ( R[,"lower"] <= R[,"upper"] )
   i[!is.finite(i)] <- FALSE
   x[i] <- R[i,"upper"]
   x
