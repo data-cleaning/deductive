@@ -12,3 +12,11 @@
 vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
+
+# binaries
+*.so
+*.o
+
+# pkg/man is generated so not necessary to put under versoin control
+pkg/man
+
