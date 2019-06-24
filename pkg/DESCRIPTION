@@ -17,5 +17,5 @@ URL: https://github.com/data-cleaning/deductive
 BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2017-06-02
 Imports: methods, lintools (>= 0.1.1.2), validate, stringdist
-Suggests: knitr, tinytest
+Suggests: knitr, tinytest (>= 0.9.5)
 RoxygenNote: 6.1.1
