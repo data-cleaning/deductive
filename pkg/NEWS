@@ -1,3 +1,9 @@
+version 0.1.5
+- Fix and efficency improvement in impute_lr: rules are split into
+  independent blocks before imputing, and preventing a crash in
+  cases where all variables are missing. (Thanks to Sigrid van Hoek
+  for reporting)
+
 version 0.1.4
 - package now uses 'tinytest' for testing
 - Registered native routines as required by CRAN

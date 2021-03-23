@@ -27,16 +27,32 @@ setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 
 #' @rdname impute_lr
 setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
+  # iterate over blocks of independent rule sets
+  blocks <- x$blocks()
+  rules <- x$exprs(lin_ineq_eps=0, lin_eq_eps=0)
+  for (block in blocks){
+    ruleblock     <- do.call("validator", rules[block])
+    varblock      <- variables(ruleblock)
+    dat[varblock] <- impute_lr_work(dat[varblock], ruleblock,...)
+  }
+  dat
+})
+
+impute_lr_work <- function(dat, x,...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
 
-  x <- do.call("validator", x$exprs(lin_eq_eps=0, lin_ineq_eps=0))
+  # skip cases where all variables are missing
+  i_skip <- rowSums(is.na(dat))==ncol(dat)
+  if (all(i_skip)) return(dat)
+
+#  x <- do.call("validator", x$exprs(lin_eq_eps=0, lin_ineq_eps=0))
 
   lc <- x$linear_coefficients()
   ops <- lc$operators
   lc <- lintools::normalize(lc$A,lc$b,lc$operators)
   lc$operators <- ops[lc$order]
   
-  X <- t(dat[colnames(lc$A)])
+  X <- t(dat[!i_skip, colnames(lc$A),drop=FALSE])
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
   }
@@ -49,11 +65,9 @@ setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
   }
   # Impute by determining implied variable ranges.
   X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
-  dat[rownames(X)] <- t(X)
+  dat[!i_skip, rownames(X)] <- t(X)
   dat
-})
-
-
+}
 
 #### Implementations -----
 

@@ -185,7 +185,14 @@ d <- data.frame(a=NA_real_, b=NA_real_, c=10., d=9.)
 expect_equal(impute_lr(d,rules), d)
 
 
-## Works when all is NA
+## skipping all NA cases
+d_in <- data.frame(x=c(NA_real_,1), y=c(NA_real_,NA_real_))
+d_out <- data.frame(x=c(NA_real_,1), y=c(NA_real_,2))
+rules <- validator(x>=0, y>=x, y - 2*x == 0)
+expect_equal(impute_lr(d_in,rules), d_out, info="all d[1,] missing")
+
+
+
 
 
 
