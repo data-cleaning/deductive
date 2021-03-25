@@ -2,6 +2,8 @@ version 0.1.5
 - In 'impute_lr' the Fourier-Motzkin method can now be toggled on and off.
 - If Fourier-Motzkin imputation fails (usually because of a lack of memory), a
   message is emitted.
+- Imputation by pseudoinverse is more robust against edge cases where
+  there are no equalities.
 - Fix and efficency improvement in impute_lr: rules are split into
   independent blocks before imputing, and preventing a crash in
   cases where all variables are missing. (Thanks to Sigrid van Hoek

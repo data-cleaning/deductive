@@ -96,21 +96,23 @@ impute_lr_work <- function(dat, x,include_fm,...){
 # pseudoinverse method.
 pivimpute <- function(A, b, ops, x, eps=1e-8){
   changed <- FALSE
-  for ( col in seq_len(ncol(x)) ){
-    x_ <- x[,col,drop=FALSE]
-    miss <- is.na(x_)
-    if (!any(miss)) next
-    eq <- ops == "=="
-    Am <- A[eq,miss,drop=FALSE]
-    Ami <- lintools::pinv(Am)
-    Id <- diag(1,nrow(Ami))
-    C <- abs(Id - Ami %*% Am)
-    J <- rowSums( C < eps) == ncol(C)
-    #v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
-    v <- Ami%*%(b[eq] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
-    x_[which(miss)[J]] <- v[J]
-    changed <- changed | any(J)
-    x[,col] <- x_
+  if (any(ops=="==")){ #prevent svd on matrix of dimension 0
+    for ( col in seq_len(ncol(x)) ){
+      x_ <- x[,col,drop=FALSE]
+      miss <- is.na(x_)
+      if (!any(miss)) next
+      eq <- ops == "=="
+      Am <- A[eq,miss,drop=FALSE]
+      Ami <- lintools::pinv(Am)
+      Id <- diag(1,nrow(Ami))
+      C <- abs(Id - Ami %*% Am)
+      J <- rowSums( C < eps) == ncol(C)
+      #v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+      v <- Ami%*%(b[eq] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+      x_[which(miss)[J]] <- v[J]
+      changed <- changed | any(J)
+      x[,col] <- x_
+    }
   }
   attr(x,"changed") <- changed
   x
