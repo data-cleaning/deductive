@@ -1,5 +1,9 @@
 #' Deductive Data Correction and Imputation
 #' 
+#' Use data validation restrictions to estimate missing values
+#' or trace and repair certain errors.
+#'
+#'
 #' @name deductive
 #' @docType  package
 #' @import methods
