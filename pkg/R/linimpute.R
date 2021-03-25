@@ -8,13 +8,23 @@
 #' restrictions may reveal unique imputation solutions when the system
 #' of linear inequalities is reduced by substituting observed values.
 #' This function applies a number of fast heuristic methods before
-#' deriving all variable ranges and unique values.
+#' deriving all variable ranges and unique values using Fourier-Motzkin
+#' elimination.
 #'
 #'
 #' @param dat an R object carrying data
 #' @param x an R object carrying validation rules
+#' @param include_fm Toggle use FM eliminaton method.
 #' @param ... arguments to be passed to other methods.
+#'
+#' @note
+#' The Fourier-Motzkin elimination method can use large amounts of memory and
+#' may be slow. When memory allocation fails for a ceratian record, the method
+#' is skipped for that record with a message. This means that there may be
+#' unique values to be derived but it is too computationally costly on the
+#' current hardware.
 #' 
+#'
 #' @examples
 #'
 #' v <- validate::validator(y ==2,y + z ==3, x +y <= 0)
@@ -26,19 +36,19 @@ setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 
 
 #' @rdname impute_lr
-setMethod("impute_lr", c("data.frame","validator"), function(dat, x, ...){
+setMethod("impute_lr", c("data.frame","validator"), function(dat, x, include_fm=TRUE, ...){
   # iterate over blocks of independent rule sets
   blocks <- x$blocks()
   rules <- x$exprs(lin_ineq_eps=0, lin_eq_eps=0)
   for (block in blocks){
     ruleblock     <- do.call("validator", rules[block])
     varblock      <- variables(ruleblock)
-    dat[varblock] <- impute_lr_work(dat[varblock], ruleblock,...)
+    dat[varblock] <- impute_lr_work(dat[varblock], ruleblock, include_fm, ...)
   }
   dat
 })
 
-impute_lr_work <- function(dat, x,...){
+impute_lr_work <- function(dat, x,include_fm,...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
 
   # skip cases where all variables are missing
@@ -64,7 +74,10 @@ impute_lr_work <- function(dat, x,...){
     X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
   }
   # Impute by determining implied variable ranges.
-  X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
+  #
+  if (include_fm){
+    X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
+  }
   dat[!i_skip, rownames(X)] <- t(X)
   dat
 }
@@ -216,10 +229,14 @@ impute_range <- function(A, b, x, ops, eps=1e-8){
 impute_range_x <- function(x,A,b,neq, nleq,eps=1e-8){
   obs <- !is.na(x)
   if (all(obs)) return(x)
-  L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
-  R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
-  i <- (R[ ,"upper"] - R[ ,"lower"] < eps) & ( R[,"lower"] <= R[,"upper"] )
-  i[!is.finite(i)] <- FALSE
-  x[i] <- R[i,"upper"]
+  tryCatch({
+    L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
+    R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
+    i <- (R[ ,"upper"] - R[ ,"lower"] < eps) & ( R[,"lower"] <= R[,"upper"] )
+    i[!is.finite(i)] <- FALSE
+    x[i] <- R[i,"upper"]
+  }, error=function(e){
+    message(sprintf("FM method skipped because %s", e$message))
+  })
   x
 }
