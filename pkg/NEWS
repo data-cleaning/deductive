@@ -1,13 +1,11 @@
-version 0.1.5
-- In 'impute_lr' the Fourier-Motzkin method can now be toggled on and off.
+version 1.0.0
+- In 'impute_lr' there is now an option to choose which sub-methods to use.
+- Internal: 'impute_implied' now uses lintools::compact to detect
+  inequality pairs that together yield an equality.
 - If Fourier-Motzkin imputation fails (usually because of a lack of memory), a
   message is emitted.
 - Imputation by pseudoinverse is more robust against edge cases where
   there are no equalities.
-- Fix and efficency improvement in impute_lr: rules are split into
-  independent blocks before imputing, and preventing a crash in
-  cases where all variables are missing. (Thanks to Sigrid van Hoek
-  for reporting)
 
 version 0.1.4
 - package now uses 'tinytest' for testing

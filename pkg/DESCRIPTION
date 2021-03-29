@@ -11,11 +11,11 @@ Authors@R: c(person("Mark", "van der
 Description: Attempt to repair inconsistencies and missing values in
         data records by using information from valid values and
         validation rules restricting the data.
-Version: 0.1.4.3
+Version: 1.0.0
 Depends: R (>= 3.2.0)
 URL: https://github.com/data-cleaning/deductive
 BugReports: https://github.com/data-cleaning/deductive/issues
 Date: 2017-06-02
-Imports: methods, lintools (>= 0.1.1.2), validate, stringdist
-Suggests: knitr, tinytest (>= 0.9.5)
+Imports: methods, lintools, validate, stringdist
+Suggests: tinytest (>= 0.9.5)
 RoxygenNote: 7.1.1

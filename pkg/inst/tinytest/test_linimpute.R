@@ -1,4 +1,5 @@
 
+if (packageVersion("lintools") <= "0.1.3") exit_file("insufficient lintools version")
 
 ## imputation by pseudoinverse ----
 # example from de Waal et al (2009) pp 304.
@@ -171,13 +172,13 @@ v <- validator(
 df_in <- data.frame(x1=25,x2=NA_real_,x3=25,x4=1,x5=NA_real_,x6=NA_real_,x7=1,x8=26)
 df_out <- df_in; df_out[1,c(2,5,6)] <- 0
 
-expect_equal(impute_lr(df_in,v),df_out)
+expect_equal(impute_lr(df_in,v, methods="fm"),df_out)
 
 
 ## works with var_group ----
 rules <- validator(var_group(a,b,c,d) >= 0, a+b+c == d)
 d <- data.frame(a=NA, b=NA, c=5,d=5)
-expect_equal(impute_lr(d,rules), data.frame(a=0,b=0,c=5,d=5))
+expect_equal(impute_lr(d,rules, method="fm"), data.frame(a=0,b=0,c=5,d=5))
 
 ## works with ill-defined problem ----
 rules <- validator(var_group(a,b,c,d)>=0, a+b+c==d)

@@ -14,7 +14,9 @@
 #'
 #' @param dat an R object carrying data
 #' @param x an R object carrying validation rules
-#' @param include_fm Toggle use FM eliminaton method.
+#' @param methods What methods to use. Add 'fm' to also compute variable ranges
+#'        using fourier-motzkin elimination (can be slow and may use a lot of memory).
+#'
 #' @param ... arguments to be passed to other methods.
 #'
 #' @note
@@ -36,26 +38,27 @@ setGeneric("impute_lr", function(dat, x,...) standardGeneric("impute_lr"))
 
 
 #' @rdname impute_lr
-setMethod("impute_lr", c("data.frame","validator"), function(dat, x, include_fm=TRUE, ...){
+setMethod("impute_lr", c("data.frame","validator"), function(dat, x, methods=c("zeros","piv","implied"), ...){
   # iterate over blocks of independent rule sets
-  blocks <- x$blocks()
-  rules <- x$exprs(lin_ineq_eps=0, lin_eq_eps=0)
-  for (block in blocks){
-    ruleblock     <- do.call("validator", rules[block])
-    varblock      <- variables(ruleblock)
-    dat[varblock] <- impute_lr_work(dat[varblock], ruleblock, include_fm, ...)
+  exprs  <- x$exprs(lin_ineq_eps=0, lin_eq_eps=0, expand_groups=TRUE, expand_assignments=TRUE)
+  rules  <- do.call("validator", exprs)
+  
+  if (identical(methods,"all")){
+    methods <- c("zeros","piv","implied","fm")
   }
-  dat
+
+  impute_lr_work(dat, rules, methods,...)
 })
 
-impute_lr_work <- function(dat, x,include_fm,...){
+impute_lr_work <- function(dat, x, methods,...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
+
+
 
   # skip cases where all variables are missing
   i_skip <- rowSums(is.na(dat))==ncol(dat)
   if (all(i_skip)) return(dat)
 
-#  x <- do.call("validator", x$exprs(lin_eq_eps=0, lin_ineq_eps=0))
 
   lc <- x$linear_coefficients()
   ops <- lc$operators
@@ -66,16 +69,25 @@ impute_lr_work <- function(dat, x,include_fm,...){
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
   }
-  ## TODO: optionally use fmimpute
+  
   attr(X,"changed") <- TRUE
   while ( attr(X,"changed") ){
-    X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
-    X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
-    X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
+    if("piv" %in% methods){    
+      X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
+    }
+    if ("zeros" %in% methods){
+      X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
+    }
+    if ("implied" %in% methods){
+      X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
+    }
+    if (!any(c("piv","implied","zeros") %in% methods)){
+      attr(X,"changed") <- FALSE
+    }
   }
   # Impute by determining implied variable ranges.
   #
-  if (include_fm){
+  if ("fm" %in% methods){
     X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
   }
   dat[!i_skip, rownames(X)] <- t(X)
@@ -106,9 +118,8 @@ pivimpute <- function(A, b, ops, x, eps=1e-8){
       Ami <- lintools::pinv(Am)
       Id <- diag(1,nrow(Ami))
       C <- abs(Id - Ami %*% Am)
-      J <- rowSums( C < eps) == ncol(C)
-      #v <- Ami%*%(b[eq,,drop=FALSE] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
-      v <- Ami%*%(b[eq] - A[eq,t(!miss),drop=FALSE]%*%x_[!miss,drop=FALSE])
+      J <- rowSums(C < eps) == ncol(C)
+      v <- Ami%*%(b[eq] - A[eq,!miss,drop=FALSE]%*%x_[!miss,drop=FALSE])
       x_[which(miss)[J]] <- v[J]
       changed <- changed | any(J)
       x[,col] <- x_
@@ -140,9 +151,9 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
   storage.mode(b) <- "double"
   storage.mode(x) <- "double"
   storage.mode(eps) <- "double"
-  changed <- if ( is.null(attr(x,"changed")) ) FALSE else attr(x,"changed")
   x <- .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg_var, eps)
-  attr(x,"changed") <- attr(x,"changed") | changed
+  changed <- if ( is.null(attr(x,"changed")) ) FALSE else attr(x,"changed")
+  attr(x,"changed") <- changed
   x
 }
 
@@ -162,11 +173,10 @@ impute_implied <- function(A, b, ops, x, eps=1e-8){
 
 impute_implied_x <- function(A, b, ops, x, eps=1e-8){
   missing <- is.na(x)
-  L <- list(A=A,b=b)
   prev_nmiss <- Inf 
   curr_nmiss <- sum(missing) 
 
-  while (prev_nmiss > curr_nmiss){
+  while (nrow(A) > 0 && prev_nmiss > curr_nmiss){
     prev_nmiss <- curr_nmiss
     # substitute observed values
     L <- lintools::subst_value(
@@ -175,40 +185,27 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
       , variables = !missing
       , values = x[!missing]
     )
-    
-    #
-    iA <- abs(L$A) > eps
-    isingle <- rowSums(iA>eps) == 1 
+    L <- lintools::compact(A=L$A, b=L$b, x=NULL,
+        								  , neq               = sum(ops=="==")
+        								  , nleq              = sum(ops=="<=")
+        								  , remove_columns    = FALSE
+        								  , remove_rows       = TRUE
+        								  , deduplicate       = TRUE
+        								  , implied_equations = TRUE)
+    A <- L$A
+    b <- L$b
+    ops <- c(rep("==", L$neq)
+           , rep("<=", L$nleq)
+           , rep("<", nrow(L$A)-L$neq-L$nleq) )
+
+    iA <- abs(A) > eps
+    isingle <- rowSums(iA) == 1 
     
     # replace single-variable equalities
     ieq <- isingle & ops == "=="
     varindex <- apply(iA[ieq,,drop=FALSE],1,which)
-    x[varindex] <- L$b[isingle] / L$A[cbind(which(isingle),varindex)]
+    x[varindex] <- b[ieq] / A[cbind(which(ieq),varindex)]
 
-    # single-variable inequalities
-    ileq <- which(isingle & ops == "<=")
-    # construct normalized 
-    ba <- abs(L$b[ileq])
-    i <- ba<eps
-    ba[i] <- 0
-    Aa <- L$A
-    Aa[ileq,] <- L$A[ileq,,drop=FALSE]/(ba + i) # divide by 1 if ba is numerically zero
-    
-    # compute pair locations
-    I <- rep(ileq, times=length(ileq))
-    J <- rep(ileq, each=length(ileq))
-    # avoid double work
-    ii <- I<J
-    I <- I[ii]
-    J <- J[ii]
-    # actual comparison
-    ipairs <- which( rowSums(abs(Aa[I,,drop=FALSE] + Aa[J,,drop=FALSE])) < eps )
-    ipairs <- I[ipairs]
-    
-    #iA <- iA[ileq,,drop=FALSE]
-    varindex <-  apply(iA[ipairs,,drop=FALSE],1,which)   
-    x[varindex] <- ba[ipairs] / Aa[cbind(ipairs,varindex)]
-    
     missing <- is.na(x)
     curr_nmiss <- sum(missing)
     
