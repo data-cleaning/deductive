@@ -192,7 +192,11 @@ d_out <- data.frame(x=c(NA_real_,1), y=c(NA_real_,2))
 rules <- validator(x>=0, y>=x, y - 2*x == 0)
 expect_equal(impute_lr(d_in,rules), d_out, info="all d[1,] missing")
 
-
+## regression test, thanks to Sigrid van Hoek for reporting the issue.
+d <- read.csv("lr_implied_data.csv")
+r <- validator(.file="lr_implied_rules.yml")
+expect_true( all(confront(impute_lr(d,r, methods="implied"), r), na.rm=TRUE))
+expect_true( all(confront(impute_lr(d,r, methods="fm"), r), na.rm=TRUE))
 
 
 

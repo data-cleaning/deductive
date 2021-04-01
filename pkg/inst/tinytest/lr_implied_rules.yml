@@ -1,0 +1,119 @@
+---
+options:
+  raise: none
+  lin.eq.eps: 1.0e-08
+  lin.ineq.eps: 1.0e-08
+  na.value: .na
+  sequential: yes
+  na.condition: no
+---
+rules:
+- expr: X01 >= 0
+  name: V189
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X02 >= 0
+  name: V190
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X03 == X04 + X05 + X01 + X02
+  name: V193
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X06 == X03
+  name: V355
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X07 >= 0
+  name: V357
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X08 >= 0
+  name: V361
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X09 == X06 + X07 + X10 + X08
+  name: V362
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X11 >= 0
+  name: V4
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X12 >= X13
+  name: V448
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X12 + X14 >= X15 * 7.19301299489728e-07
+  name: V451
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X03 >= X15 * 7.19301299489728e-07
+  name: V479
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X16 == X14 - X11
+  name: V6
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+
