@@ -1,0 +1,164 @@
+---
+options:
+  raise: none
+  lin.eq.eps: 1.0e-08
+  lin.ineq.eps: 1.0e-08
+  na.value: .na
+  sequential: yes
+  na.condition: no
+---
+rules:
+- expr: X01 >= 0
+  name: V117
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X02 == X03 + X04 + X05
+  name: V15
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X06 >= 0
+  name: V189
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X07 >= 0
+  name: V190
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X08 == X09 + X10 + X06 + X07
+  name: V193
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X11 >= X07 - 1e-04
+  name: V418
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X05 >= X12 * 5.11662057444299e-07
+  name: V460
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X13 >= X08 * 2.63635630249974e-07
+  name: V466
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X13 == X14 + X15 + X11 + X16
+  name: V517
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X12 >= X17 - 1e-04
+  name: V624
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X09 <= X14 * 373048
+  name: V664
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X09 >= X14 * 1.76861243511403e-06
+  name: V666
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X15 == X01
+  name: V671
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X06 == X18
+  name: V678
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X03 >= 0
+  name: V7
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X16 >= 0
+  name: V71
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+- expr: X04 >= 0
+  name: V8
+  label: ''
+  description: ''
+  created: 2021-03-26 11:10:07
+  origin: command-line
+  meta:
+    language: validate 1.0.1
+    severity: error
+

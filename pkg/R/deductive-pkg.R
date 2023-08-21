@@ -6,6 +6,7 @@
 #'
 #' @name deductive
 #' @docType  package
+#' @aliases deductive-package
 #' @import methods
 #' @import lintools
 #' @import validate

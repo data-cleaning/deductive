@@ -1,4 +1,9 @@
 version 1.0.1
+- fixed Rd bug (thanks to Kurt Hornik for pointing out the changes)
+- impute_lr now passes 'eps' argument to lintools::subst_value. This resolves
+  creation of numerically infeasible systems of linear equations in certain
+  cases where a small substitution value (e.g. 1E-12) is multiplied with a
+  large coefficient (e.g. 1E5).
 
 version 1.0.0
 - In 'impute_lr' there is now an option to choose which sub-methods to use.

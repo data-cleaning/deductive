@@ -184,6 +184,7 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
       , b = b
       , variables = !missing
       , values = x[!missing]
+      , eps=eps
     )
     L <- lintools::compact(A=L$A, b=L$b, x=NULL,
         								  , neq               = sum(ops=="==")
@@ -229,8 +230,15 @@ impute_range_x <- function(x,A,b,neq, nleq,eps=1e-8){
   obs <- !is.na(x)
   if (all(obs)) return(x)
   tryCatch({
-    L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs])
-    R <- lintools::ranges(A=L$A,b=L$b,neq=neq,nleq=nleq,eps=eps)
+    L <- lintools::subst_value(A=A,b=b,variables=obs, values=x[obs], eps=eps)
+    L <- lintools::compact(A=L$A, b=L$b, x=NULL,
+        								  , neq               = neq
+        								  , nleq              = nleq
+        								  , remove_columns    = FALSE
+        								  , remove_rows       = TRUE
+        								  , deduplicate       = TRUE
+        								  , implied_equations = TRUE)
+    R <- lintools::ranges(A=L$A,b=L$b,neq=L$neq,nleq=L$nleq,eps=eps)
     i <- (R[ ,"upper"] - R[ ,"lower"] < eps) & ( R[,"lower"] <= R[,"upper"] )
     i[!is.finite(i)] <- FALSE
     x[i] <- R[i,"upper"]
