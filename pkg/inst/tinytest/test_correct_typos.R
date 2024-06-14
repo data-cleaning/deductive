@@ -128,4 +128,10 @@ dat2 <- read.csv(textConnection(
   expect_equivalent(dat, correct_typos(dat,v))
   
 
-
+## works with var_group ----
+d <- data.frame(a=NA, b=0, c=4, d=5)
+expected_result <- data.frame(a=1, b=0, c=4, d=5)
+v <- validator(var_group(a,b,c,d) >= 0, a+b+c == d)
+expect_equal(impute_lr(d, v), expected_result)
+v <- validator(g := var_group(a,b,c,d), g >= 0, a+b+c == d)
+expect_equal(impute_lr(d, v), expected_result)

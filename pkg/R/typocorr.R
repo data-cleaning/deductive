@@ -53,13 +53,15 @@ setGeneric("correct_typos", function(dat, x,...) standardGeneric("correct_typos"
 setMethod("correct_typos", c("data.frame","validator")
   , function(dat,x,fixate=NULL, eps=1e-8,maxdist=1, ...){
 
-  lc <- x$linear_coefficients()
-  a <- lc$b
+  # expand group and assignment rules
+  exprs <- x$exprs(lin_ineq_eps=0, lin_eq_eps=0, expand_groups=TRUE, expand_assignments=TRUE)
+  x <- do.call("validator", exprs)
+
   # separate equalities and inequalities
+  lc <- x$linear_coefficients()
   eq <- lc$operators == "=="
   F <- x[!eq,]  # inequalities
   E <- x[eq,]   # equalities
-  a <- a[eq]
   vars <- validate::variables(E)
   
   fixate <- if( is.null(fixate) ) {

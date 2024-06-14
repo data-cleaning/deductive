@@ -176,9 +176,12 @@ expect_equal(impute_lr(df_in,v, methods="fm"),df_out)
 
 
 ## works with var_group ----
+d <- data.frame(a=NA, b=NA, c=5, d=5)
+expected_result <- data.frame(a=0, b=0, c=5, d=5)
 rules <- validator(var_group(a,b,c,d) >= 0, a+b+c == d)
-d <- data.frame(a=NA, b=NA, c=5,d=5)
-expect_equal(impute_lr(d,rules, method="fm"), data.frame(a=0,b=0,c=5,d=5))
+expect_equal(impute_lr(d,rules, method="fm"), expected_result)
+rules <- validator(g := var_group(a,b,c,d), g >= 0, a+b+c == d)
+expect_equal(impute_lr(d,rules, method="fm"), expected_result)
 
 ## works with ill-defined problem ----
 rules <- validator(var_group(a,b,c,d)>=0, a+b+c==d)
