@@ -1,7 +1,3 @@
-
-
-
-
 #' Impute values derived from linear (in)equality restrictions.
 #'
 #' Partially filled records \eqn{\boldsymbol{x}} under linear (in)equality
@@ -47,52 +43,91 @@ setMethod("impute_lr", c("data.frame","validator"), function(dat, x, methods=c("
     methods <- c("zeros","piv","implied","fm")
   }
 
-  impute_lr_work(dat, rules, methods,...)
+  # skip cases where all variables are missing
+  i_skip <- rowSums(is.na(dat)) == ncol(dat)
+  dat[!i_skip, ] <- impute_lr_work(dat[!i_skip, ], rules, methods,...)
+  dat
 })
 
 impute_lr_work <- function(dat, x, methods,...){
   eps <- 1e-8 # TODO: need to integrate with validate::voptions
 
+  # If dat is empty, do nothing.
+  if (nrow(dat) == 0) {
+    return(dat)
+  }
 
-
-  # skip cases where all variables are missing
-  i_skip <- rowSums(is.na(dat))==ncol(dat)
-  if (all(i_skip)) return(dat)
-
+  # Find rule violations in dat
+  confront_values <- validate::values(validate::confront(dat, x))
+  old_violations <- (confront_values == FALSE & !is.na(confront_values))
 
   lc <- x$linear_coefficients()
   ops <- lc$operators
   lc <- lintools::normalize(lc$A,lc$b,lc$operators)
   lc$operators <- ops[lc$order]
-  
-  X <- t(dat[!i_skip, colnames(lc$A),drop=FALSE])
+
+  # X is the transpose of the relevant subset of rows and columns of the data,
+  # so the columns of x correspond to rows (records) in the original data.
+  X <- t(dat[, colnames(lc$A), drop = FALSE])
   if (!is.numeric(X)){
     stop("Linear restrictions on nonnumeric data")
   }
-  
-  attr(X,"changed") <- TRUE
-  while ( attr(X,"changed") ){
-    if("piv" %in% methods){    
-      X <- pivimpute(A=lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
-    }
-    if ("zeros" %in% methods){
-      X <- zeroimpute(A=lc$A,b=lc$b, ops=lc$operators, x = X, eps=eps)
-    }
-    if ("implied" %in% methods){
-      X <- impute_implied(A = lc$A, b=lc$b, ops=lc$operators, x = X, eps=eps)
-    }
-    if (!any(c("piv","implied","zeros") %in% methods)){
-      attr(X,"changed") <- FALSE
+
+  # Loop over imputation methods until no more imputations are made.
+  all_loop_methods <- list(piv = pivimpute, zeros = zeroimpute, implied = impute_implied)
+  loop_method_funcs <- all_loop_methods[methods %in% names(all_loop_methods)]
+  done <- FALSE
+  while (!done) {
+    done <- TRUE
+    for (method_func in loop_method_funcs) {
+      impute_result <- impute_lr_single(
+        func = method_func, dat = dat, rules = x, old_violations = old_violations,
+        A = lc$A, b = lc$b, ops = lc$operators, x = X, eps = eps
+      )
+      X <- impute_result$x
+      dat <- impute_result$dat
+      done <- !any(impute_result$is_changed)
     }
   }
+
   # Impute by determining implied variable ranges.
-  #
-  if ("fm" %in% methods){
-    X <- impute_range(A=lc$A,b=lc$b, x = X, ops=lc$operators, eps = eps)
+  # This method is outside the method loop because it is computationally expensive.
+  if ("fm" %in% methods) {
+    impute_result <- impute_lr_single(
+      func = impute_range, dat = dat, rules = x, old_violations = old_violations,
+      A = lc$A, b = lc$b, ops = lc$operators, x = X, eps = eps
+    )
+    dat <- impute_result$dat
+    X <- impute_result$x
   }
-  dat[!i_skip, rownames(X)] <- t(X)
   dat
 }
+
+# Single pass imputation using the given imputation function.
+impute_lr_single <- function(func, dat, rules, old_violations, A, b, ops, x, eps) {
+  x_new <- func(A = A, b = b, ops = ops, x = x, eps = eps)
+  is_changed <- attr(x_new, "changed")
+  if (any(is_changed)) {
+    # Determine changed records of dat.
+    x_changed <- x_new[, is_changed, drop = FALSE]
+    dat_changed <- dat[is_changed, ]
+    dat_changed[, rownames(x_new)] <- t(x_changed)
+    # Find rule violations in new dat.
+    confront_values <- validate::values(validate::confront(dat_changed, rules))
+    confront_violations <- (confront_values == FALSE & !is.na(confront_values))
+    # Find violations in dat that are not old violations.
+    is_new_violation <- (confront_violations & !old_violations[is_changed, ])
+    is_bad_change <- rowSums(is_new_violation) > 0
+    # Remove changes that introduced new rule violations.
+    x_changed <- x_changed[, !is_bad_change, drop = FALSE]
+    is_changed[is_bad_change] <- FALSE
+    # Apply the non-bad changes.
+    x[, is_changed] <- x_changed
+    dat[is_changed, rownames(x_new)] <- t(x_changed)
+  }
+  list(dat = dat, x = x, is_changed = is_changed)
+}
+
 
 #### Implementations -----
 
@@ -106,26 +141,29 @@ impute_lr_work <- function(dat, x, methods,...){
 #
 # Attempt to impute empty values in the columns of x using the
 # pseudoinverse method.
-pivimpute <- function(A, b, ops, x, eps=1e-8){
-  changed <- FALSE
-  if (any(ops=="==")){ #prevent svd on matrix of dimension 0
-    for ( col in seq_len(ncol(x)) ){
+pivimpute <- function(A, b, ops, x, eps=1e-8) {
+  nx <- ncol(x)
+  is_changed <- rep(FALSE, nx)
+  eq <- ops == "=="
+  if (any(eq)) { #prevent svd on matrix of dimension 0
+    for (col in seq_len(nx)) {
       x_ <- x[,col,drop=FALSE]
       miss <- is.na(x_)
       if (!any(miss)) next
-      eq <- ops == "=="
       Am <- A[eq,miss,drop=FALSE]
       Ami <- lintools::pinv(Am)
       Id <- diag(1,nrow(Ami))
       C <- abs(Id - Ami %*% Am)
       J <- rowSums(C < eps) == ncol(C)
-      v <- Ami%*%(b[eq] - A[eq,!miss,drop=FALSE]%*%x_[!miss,drop=FALSE])
-      x_[which(miss)[J]] <- v[J]
-      changed <- changed | any(J)
-      x[,col] <- x_
+      if (any(J)) {
+        v <- Ami%*%(b[eq] - A[eq,!miss,drop=FALSE]%*%x_[!miss,drop=FALSE])
+        x_[which(miss)[J]] <- v[J]
+        x[,col] <- x_
+        is_changed[col] <- TRUE
+      }
     }
   }
-  attr(x,"changed") <- changed
+  attr(x, "changed") <- is_changed
   x
 }
 
@@ -151,10 +189,7 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
   storage.mode(b) <- "double"
   storage.mode(x) <- "double"
   storage.mode(eps) <- "double"
-  x <- .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg_var, eps)
-  changed <- if ( is.null(attr(x,"changed")) ) FALSE else attr(x,"changed")
-  attr(x,"changed") <- changed
-  x
+  .Call("R_imputezero",A[eq,,drop=FALSE],b, x, nonneg_var, eps)
 }
 
 
@@ -164,9 +199,10 @@ zeroimpute <- function(A, b, ops, x, eps=1e-8){
 # impute values implied by two simple inequalities
 
 impute_implied <- function(A, b, ops, x, eps=1e-8){
-  nna <- sum(is.na(x))
+  isna_old <- is.na(x)
   x <- apply(x,2,impute_implied_x, A=A, b=b, ops=ops, eps=eps)
-  attr(x,"changed") <- nna > sum(is.na(x))
+  isna_new <- is.na(x)
+  attr(x, "changed") <- (colSums(isna_new != isna_old) > 0)
   x
 }
 
@@ -219,10 +255,14 @@ impute_implied_x <- function(A, b, ops, x, eps=1e-8){
 
 
 # loop over a numeric array
-impute_range <- function(A, b, x, ops, eps=1e-8){
+impute_range <- function(A, b, ops, x, eps=1e-8){
+  isna_old <- is.na(x)
   neq <- sum(ops=="==")
   nleq <- sum(ops == "<=")
-  apply(x,2,impute_range_x,A=A,b=b,neq=neq,nleq=nleq,eps=eps)
+  x <- apply(x,2,impute_range_x,A=A,b=b,neq=neq,nleq=nleq,eps=eps)
+  isna_new <- is.na(x)
+  attr(x, "changed") <- (colSums(isna_new != isna_old) > 0)
+  x
 }
 
 # impute by deriving variable ranges (may be computationally expensive)

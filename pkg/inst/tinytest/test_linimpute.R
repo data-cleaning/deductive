@@ -98,9 +98,8 @@ expect_equivalent(
     1,NA,NA,1,
     NA,1,1,2
   ),ncol=2)
-  attr(X,"changed") <- FALSE
   out <- matrix(c(1,0,0,1, NA,1,1,2),ncol=2)
-  attr(out,"changed") <- TRUE
+  attr(out, "changed") <- c(TRUE, FALSE)
   lc <- v$linear_coefficients()
   expect_equal(
     deductive:::zeroimpute(A=lc$A, b=lc$b, ops=lc$operators, x=X)
@@ -209,5 +208,9 @@ r <- validator(.file="lr_fm_rules.yml")
 expect_true( all(confront(impute_lr(d,r, methods="implied"), r), na.rm=TRUE))
 expect_true( all(confront(impute_lr(d,r, methods="fm"), r), na.rm=TRUE))
 
-
-
+## test imputation of value in infeasible system.
+#  the value a = -2 must not be imputed in the first record.
+rules <- validator(a >= 0, a + b == c)
+d_in <- data.frame(a = c(NA_real_, NA_real_, NA_real_), b = c(10, 10, 10), c = c(8, 10, 12))
+d_out <- data.frame(a = c(NA_real_, 0, 2), b = c(10, 10, 10), c = c(8, 10, 12))
+expect_equal(impute_lr(d_in, rules), d_out)
