@@ -83,11 +83,7 @@ SEXP R_imputezero(SEXP A_, SEXP b_, SEXP X_, SEXP nonneg_, SEXP eps_ ){
   double *A = REAL(A_);
   double *b = REAL(b_);
   double eps = REAL(eps_)[0];
-
   int *nonneg = INTEGER(nonneg_);
-  SEXP changed =  PROTECT(allocVector(LGLSXP,1L));
-  int *ch = INTEGER(changed);
-  ch[0] = 0;
 
   int dim[2];
   rdim(A_, dim);
@@ -95,14 +91,18 @@ SEXP R_imputezero(SEXP A_, SEXP b_, SEXP X_, SEXP nonneg_, SEXP eps_ ){
     , colsA = dim[1];
   rdim(XC,dim);
   int nx = dim[1];  
+
+  SEXP changed =  PROTECT(allocVector(LGLSXP, nx));
+  int *ch = INTEGER(changed);
  
   double *a;
   a = (double *) malloc(sizeof(double) * colsA);
   double *x = REAL(XC);
   for ( int k=0; k < nx; k++ ){
+    ch[k] = 0;
     for ( int i=0; i < rowsA; i++){
       for ( int j=0; j < colsA; j++) a[j] = A[j*rowsA + i];
-      ch[0] = ch[0] | impute_zero(a, b[i], colsA, nonneg, eps, x);
+      ch[k] |= impute_zero(a, b[i], colsA, nonneg, eps, x);
     }
     x += colsA;
   }
