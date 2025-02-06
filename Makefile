@@ -18,6 +18,7 @@ install: pkg
 	R CMD INSTALL *.tar.gz
 
 test: doc
+	rm -rf *.tar.gz
 	R -s -e "tinytest::build_install_test('pkg')"
 
 manual: doc

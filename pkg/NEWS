@@ -1,4 +1,5 @@
 version 1.0.1
+- fixed issue where in some cases rule-violating imputations were done (GH issue #5)
 - fixed Rd bug (thanks to Kurt Hornik for pointing out the changes)
 - impute_lr now passes 'eps' argument to lintools::subst_value. This resolves
   creation of numerically infeasible systems of linear equations in certain

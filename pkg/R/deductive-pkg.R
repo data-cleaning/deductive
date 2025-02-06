@@ -14,6 +14,6 @@
 #' @importFrom stats complete.cases 
 #' @importFrom stats setNames
 #' @useDynLib deductive, .registration=TRUE
-{}
+"_PACKAGE"
 
 
